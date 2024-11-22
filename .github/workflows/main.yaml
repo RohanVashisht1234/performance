@@ -1,0 +1,43 @@
+name: Benchmark C, Zig, and Rust
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+        uses: mlugg/setup-zig@v1
+
+      - name: Set up C Environment
+        run: |
+          sudo apt update
+          sudo apt install -y gcc
+
+      - name: Compile and run C program
+        run: |
+          gcc -O3 c/main.c -o c_program
+          time ./c_program
+
+      - name: Compile and run Zig program
+        run: |
+          zig build-exe zig/main.zig -Doptimize=ReleaseFast
+          time ./main
+
+      - name: Set up Rust Environment
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+          source $HOME/.cargo/env
+
+      - name: Compile and run Rust program
+        run: |
+          cargo build --release --manifest-path rust/Cargo.toml
+          time target/release/main
